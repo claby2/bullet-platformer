@@ -178,12 +178,11 @@ class Player {
 
             isFalling = initialY < y ? true : false;
 
-            speedY += acceleration;
+            speedY += speedY < HITBOX_HEIGHT ? acceleration : 0;
         }
 
         void handleEvents(SDL_Event& event) {
             if(event.type == SDL_KEYDOWN && event.key.repeat == 0){
-                std::cout << event.key.keysym.sym << "\n";
                 switch(event.key.keysym.sym){
                     case SDLK_w: speedY = -2*velocity; break;
                     case SDLK_SPACE: speedY = -2*velocity; break;
