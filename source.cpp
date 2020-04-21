@@ -180,8 +180,10 @@ class Player {
 
         void handleEvents(SDL_Event& event) {
             if(event.type == SDL_KEYDOWN && event.key.repeat == 0){
+                std::cout << event.key.keysym.sym << "\n";
                 switch(event.key.keysym.sym){
                     case SDLK_w: speedY = -2*velocity; break;
+                    case SDLK_SPACE: speedY = -2*velocity; break;
                     // case SDLK_s: speedY += velocity; break;
                     case SDLK_a: speedX -= velocity; break;
                     case SDLK_d: speedX += velocity; break;
