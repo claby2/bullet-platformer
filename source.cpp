@@ -16,6 +16,9 @@ const int SPRITE_COLUMN = 10;
 const int SPRITE_WIDTH = 100;
 const int SPRITE_HEIGHT = 55;
 
+const int HITBOX_WIDTH = 30;
+const int HITBOX_HEIGHT = 55;
+
 const int ANIMATION_FRAME_RATE = 8;
 anim playerAnimations;
 
@@ -153,12 +156,12 @@ class Player {
 
         void move() {
             x += speedX;
-            if((x < 0) || (x +  SPRITE_WIDTH > SCREEN_WIDTH)){
+            if((x < -HITBOX_WIDTH) || (x + (SPRITE_WIDTH - HITBOX_WIDTH)> SCREEN_WIDTH)){
                 x -= speedX;
             }
 
             y += speedY;
-            if((y < 0) || (y +  SPRITE_HEIGHT > SCREEN_HEIGHT)){
+            if((y < 0) || (y +  HITBOX_HEIGHT > SCREEN_HEIGHT)){
                 y -= speedY;
             }
         }
