@@ -117,12 +117,15 @@ class Player {
             clip = playerAnimations.idle;
             direction = true;
             isFalling = false;
+            isAttacking = false;
         }
 
         void setClip() {
             std::pair<int, int> initialClip = clip;
 
-            if(speedY < 0) {
+            if(isAttacking) {
+                playerState = "attack1";
+            } else if(speedY < 0) {
                 playerState = "jump";
             } else if(isFalling) {
                 playerState = "fall";
@@ -196,12 +199,18 @@ class Player {
                     case SDLK_d: speedX -= velocity; break;
                 }
             }
+            if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+                isAttacking = true;
+            }
         }
 
         void render() {
             if(playerState == "jump" || playerState == "fall") {
                 frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.second*ANIMATION_FRAME_RATE : frame + 1;
             } else {
+                if((playerState == "attack1" || playerState == "attack2" || playerState == "attack3") && (frame / ANIMATION_FRAME_RATE >= clip.second)) {
+                    isAttacking = false;
+                }
                 frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
             }
             res = direction  ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
@@ -221,6 +230,7 @@ class Player {
         bool direction;
         std::string playerState;
         bool isFalling;
+        bool isAttacking;
 };
 
 void populateClips() {
