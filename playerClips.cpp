@@ -1,9 +1,9 @@
 #include "C:/MinGW/include/SDL2/SDL.h"
 #include "./constants.cpp"
 
-struct clip_container {
+struct player_clip_container {
     SDL_Rect gHeroKnightClips[90];
-    constexpr clip_container() : gHeroKnightClips() {
+    constexpr player_clip_container() : gHeroKnightClips() {
         for(int i = 0; i < SPRITE_ROW; i++) {
             for(int j = 0; j < SPRITE_COLUMN; j++) {
                 gHeroKnightClips[i*SPRITE_COLUMN + j].x = j * SPRITE_WIDTH;

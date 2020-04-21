@@ -8,7 +8,11 @@
 #include <iostream>
 #include "./playerAnimations.cpp"
 #include "./playerClips.cpp"
+#include "./tilesClips.cpp"
+#include "./levels.cpp"
 #include "./constants.cpp"
+
+int currentLevel = 0;
 
 anim playerAnimations;
 
@@ -90,8 +94,10 @@ class LTexture {
 };
 
 
-constexpr clip_container clips;
+constexpr player_clip_container playerClips;
+constexpr tiles_clip_container tilesClips;
 LTexture gSpriteSheetTexture;
+LTexture gTilesSpriteSheetTexture;
 LTexture gTextTexture;
 
 class Player {
@@ -204,7 +210,7 @@ class Player {
                 frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
             }
             res = direction  ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-            gSpriteSheetTexture.render(x, y, &clips.gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
+            gSpriteSheetTexture.render(x, y, &playerClips.gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
         }
 
     private:
@@ -226,10 +232,12 @@ class Player {
 bool loadMedia() {
     gFont = TTF_OpenFont("fonts/OpenSans-Regular.ttf", 28);
     gSpriteSheetTexture.loadFromFile("assets/hero_knight_sprite_sheet.png");
+    gTilesSpriteSheetTexture.loadFromFile("assets/tiles_sprite_sheet.png");
 }
 
 void close() {
     gSpriteSheetTexture.free();
+    gTilesSpriteSheetTexture.free();
     gTextTexture.free();
     TTF_CloseFont(gFont);
     gFont = NULL;
