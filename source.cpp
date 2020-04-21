@@ -7,19 +7,9 @@
 #include <map>
 #include <iostream>
 #include "./playerAnimations.cpp"
+#include "./playerClips.cpp"
+#include "./constants.cpp"
 
-const int SCREEN_WIDTH = 900;
-const int SCREEN_HEIGHT = 900;
-
-const int SPRITE_ROW = 9;
-const int SPRITE_COLUMN = 10;
-const int SPRITE_WIDTH = 100;
-const int SPRITE_HEIGHT = 55;
-
-const int HITBOX_WIDTH = 30;
-const int HITBOX_HEIGHT = 55;
-
-const int ANIMATION_FRAME_RATE = 8;
 anim playerAnimations;
 
 SDL_Window* gWindow = NULL;
@@ -75,7 +65,7 @@ class LTexture {
 		void setAlpha( Uint8 alpha ) {
             SDL_SetTextureAlphaMod(mTexture, alpha);
         }
-		void render( int x, int y, SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE){
+		void render( int x, int y, const SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE){
             SDL_Rect renderQuad = { x, y, mWidth, mHeight };
 
             if( clip != NULL )
@@ -99,7 +89,8 @@ class LTexture {
 		int mHeight;
 };
 
-SDL_Rect gHeroKnightClips[90];
+
+constexpr clip_container clips;
 LTexture gSpriteSheetTexture;
 LTexture gTextTexture;
 
@@ -213,7 +204,7 @@ class Player {
                 frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
             }
             res = direction  ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-            gSpriteSheetTexture.render(x, y, &gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
+            gSpriteSheetTexture.render(x, y, &clips.gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
         }
 
     private:
@@ -232,21 +223,9 @@ class Player {
         bool isAttacking;
 };
 
-void populateClips() {
-    for(int i = 0; i < SPRITE_ROW; i++) {
-        for(int j = 0; j < SPRITE_COLUMN; j++) {
-            gHeroKnightClips[i*SPRITE_COLUMN + j].x = j * SPRITE_WIDTH;
-            gHeroKnightClips[i*SPRITE_COLUMN + j].y = i * SPRITE_HEIGHT;
-            gHeroKnightClips[i*SPRITE_COLUMN + j].w = SPRITE_WIDTH;
-            gHeroKnightClips[i*SPRITE_COLUMN + j].h = SPRITE_HEIGHT;
-        }
-    }
-}
-
 bool loadMedia() {
     gFont = TTF_OpenFont("fonts/OpenSans-Regular.ttf", 28);
     gSpriteSheetTexture.loadFromFile("assets/hero_knight_sprite_sheet.png");
-    populateClips();
 }
 
 void close() {
