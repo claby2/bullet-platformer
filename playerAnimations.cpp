@@ -15,5 +15,5 @@ struct anim {
     block = {66, 70}, 
     roll = {71, 79}, 
     ledgeGrab = {80, 84}, 
-    wallSide = {85, 89};
+    wallSlide = {85, 89};
 };

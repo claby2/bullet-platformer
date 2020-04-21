@@ -18,7 +18,7 @@ const int SPRITE_COLUMN = 10;
 const int SPRITE_WIDTH = 100;
 const int SPRITE_HEIGHT = 55;
 
-const int ANIMATION_FRAME_RATE = 16;
+const int ANIMATION_FRAME_RATE = 8;
 anim playerAnimations;
 
 SDL_Window* gWindow = NULL;
@@ -105,13 +105,44 @@ LTexture gTextTexture;
 class Player {
     public:
         Player() {
-            velocity = 1.0;
+            velocity = 2.0;
             x = SCREEN_WIDTH/2;
             y = SCREEN_HEIGHT/2;
             speedX = 0;
             speedY = 0;
-            clipIndex = playerAnimations.idle.first*ANIMATION_FRAME_RATE;
+            playerState = "idle";
+            frame = 0;
+            clip = playerAnimations.idle;
             direction = true;
+        }
+
+        void setClip() {
+            std::pair<int, int> initialClip = clip;
+
+            if(speedX || speedY) {
+                playerState = "run";
+            } else {
+                playerState = "idle";
+            }
+
+            if(playerState == "idle") clip = playerAnimations.idle;
+            else if(playerState == "run") clip = playerAnimations.run; 
+            else if(playerState == "attack1") clip = playerAnimations.attack1; 
+            else if(playerState == "attack2") clip = playerAnimations.attack2; 
+            else if(playerState == "attack3") clip = playerAnimations.attack3;
+            else if(playerState == "jump") clip = playerAnimations.jump; 
+            else if(playerState == "fall") clip = playerAnimations.fall; 
+            else if(playerState == "hurt") clip = playerAnimations.hurt;
+            else if(playerState == "death") clip = playerAnimations.death; 
+            else if(playerState == "blockIdle") clip = playerAnimations.blockIdle; 
+            else if(playerState == "block") clip = playerAnimations.block;
+            else if(playerState == "roll") clip = playerAnimations.roll;
+            else if(playerState == "ledgeGrab") clip = playerAnimations.ledgeGrab;
+            else if(playerState == "wallSlide") clip = playerAnimations.wallSlide;
+ 
+            if(initialClip != clip) {
+                frame = clip.first*ANIMATION_FRAME_RATE;
+            }
         }
 
         void move() {
@@ -145,9 +176,9 @@ class Player {
         }
 
         void render() {
-            clipIndex = clipIndex / ANIMATION_FRAME_RATE >= playerAnimations.idle.second ? playerAnimations.idle.first*ANIMATION_FRAME_RATE : clipIndex + 1;
+            frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
             res = direction  ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-            gSpriteSheetTexture.render(x, y, &gHeroKnightClips[clipIndex / ANIMATION_FRAME_RATE], 0.0, NULL, res);
+            gSpriteSheetTexture.render(x, y, &gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
         }
 
     private:
@@ -157,8 +188,10 @@ class Player {
         float y;
         float speedX;
         float speedY;
-        int clipIndex;
+        int frame;
+        std::pair<int, int> clip;
         bool direction;
+        std::string playerState;
 };
 
 void populateClips() {
@@ -224,6 +257,7 @@ int main(int argc, char* args[]) {
         SDL_SetRenderDrawColor(gRenderer, 0x00, 0x000, 0x00, 0x00);
         SDL_RenderClear(gRenderer);
         player.move();
+        player.setClip();
         player.render();
         SDL_RenderPresent(gRenderer);
 
