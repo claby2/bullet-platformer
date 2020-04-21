@@ -111,16 +111,22 @@ class Player {
             y = SCREEN_HEIGHT/2;
             speedX = 0;
             speedY = 0;
+            acceleration = 0.1;
             playerState = "idle";
             frame = 0;
             clip = playerAnimations.idle;
             direction = true;
+            isFalling = false;
         }
 
         void setClip() {
             std::pair<int, int> initialClip = clip;
 
-            if(speedX || speedY) {
+            if(speedY < 0) {
+                playerState = "jump";
+            } else if(isFalling) {
+                playerState = "fall";
+            } else if(speedX) {
                 playerState = "run";
             } else {
                 playerState = "idle";
@@ -160,23 +166,29 @@ class Player {
                 x -= speedX;
             }
 
+            float initialY = y;
+
             y += speedY;
             if((y < 0) || (y +  HITBOX_HEIGHT > SCREEN_HEIGHT)){
                 y -= speedY;
             }
+
+            isFalling = initialY < y ? true : false;
+
+            speedY += acceleration;
         }
 
         void handleEvents(SDL_Event& event) {
             if(event.type == SDL_KEYDOWN && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
-                    // case SDLK_w: speedY -= velocity; break;
+                    case SDLK_w: speedY = -2*velocity; break;
                     // case SDLK_s: speedY += velocity; break;
                     case SDLK_a: speedX -= velocity; break;
                     case SDLK_d: speedX += velocity; break;
                 }
             } else if(event.type == SDL_KEYUP && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
-                    // case SDLK_w: speedY += velocity; break;
+                    // case SDLK_w: speedY -= velocity; break;
                     // case SDLK_s: speedY -= velocity; break;
                     case SDLK_a: speedX += velocity; break;
                     case SDLK_d: speedX -= velocity; break;
@@ -185,7 +197,11 @@ class Player {
         }
 
         void render() {
-            frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
+            if(playerState == "jump" || playerState == "fall") {
+                frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.second*ANIMATION_FRAME_RATE : frame + 1;
+            } else {
+                frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
+            }
             res = direction  ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
             gSpriteSheetTexture.render(x, y, &gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
         }
@@ -197,10 +213,12 @@ class Player {
         float y;
         float speedX;
         float speedY;
+        float acceleration;
         int frame;
         std::pair<int, int> clip;
         bool direction;
         std::string playerState;
+        bool isFalling;
 };
 
 void populateClips() {
