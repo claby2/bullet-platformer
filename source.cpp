@@ -145,6 +145,14 @@ class Player {
             }
         }
 
+        void setDirection() {
+            if(speedX > 0) {
+                direction = false;
+            } else if(speedX < 0){
+                direction = true;
+            }
+        }
+
         void move() {
             x += speedX;
             if((x < 0) || (x +  SPRITE_WIDTH > SCREEN_WIDTH)){
@@ -162,8 +170,8 @@ class Player {
                 switch(event.key.keysym.sym){
                     // case SDLK_w: speedY -= velocity; break;
                     // case SDLK_s: speedY += velocity; break;
-                    case SDLK_a: speedX -= velocity; direction = true; break;
-                    case SDLK_d: speedX += velocity; direction = false; break;
+                    case SDLK_a: speedX -= velocity; break;
+                    case SDLK_d: speedX += velocity; break;
                 }
             } else if(event.type == SDL_KEYUP && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
@@ -257,6 +265,7 @@ int main(int argc, char* args[]) {
         SDL_SetRenderDrawColor(gRenderer, 0x00, 0x000, 0x00, 0x00);
         SDL_RenderClear(gRenderer);
         player.move();
+        player.setDirection();
         player.setClip();
         player.render();
         SDL_RenderPresent(gRenderer);
