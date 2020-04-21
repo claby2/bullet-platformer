@@ -12,13 +12,13 @@
 #include "./levels.cpp"
 #include "./constants.cpp"
 
-int currentLevel = 0;
-
 anim playerAnimations;
 
 SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font *gFont = NULL;
+
+int currentLevel = 0;
 
 class LTexture {
     public:
@@ -69,13 +69,13 @@ class LTexture {
 		void setAlpha( Uint8 alpha ) {
             SDL_SetTextureAlphaMod(mTexture, alpha);
         }
-		void render( int x, int y, const SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE){
+		void render( int x, int y, const SDL_Rect* clip = NULL, double angle = 0.0, SDL_Point* center = NULL, SDL_RendererFlip flip = SDL_FLIP_NONE, float widthMultiplier = 1, float heightMultiplier = 1){
             SDL_Rect renderQuad = { x, y, mWidth, mHeight };
 
             if( clip != NULL )
             {
-                renderQuad.w = clip->w;
-                renderQuad.h = clip->h;
+                renderQuad.w = clip->w * widthMultiplier;
+                renderQuad.h = clip->h * heightMultiplier;
             }
 
             SDL_RenderCopyEx(gRenderer, mTexture, clip, &renderQuad, angle, center, flip);
@@ -115,6 +115,8 @@ class Player {
             direction = true;
             isFalling = false;
             isAttacking = false;
+            isContactWall = false;
+            jumpMultiplier = 3.0;
         }
 
         void setClip() {
@@ -159,40 +161,62 @@ class Player {
                 direction = true;
             }
         }
+        
+        bool willIntersectTile() {
 
-        void move() {
-            x += speedX;
-            if((x < -HITBOX_WIDTH) || (x + (SPRITE_WIDTH - HITBOX_WIDTH)> SCREEN_WIDTH)){
-                x -= speedX;
+            bool isIntersect = false;
+ 
+            std::pair<float, float> playerCoords = {x + speedX + ((SPRITE_WIDTH - HITBOX_WIDTH)/2), y + speedY};
+            std::pair<int, int> topLeft = {playerCoords.first / LEVEL_WIDTH, playerCoords.second / LEVEL_HEIGHT};
+            std::pair<int, int> bottomRight = {(playerCoords.first + HITBOX_WIDTH) / LEVEL_WIDTH, (playerCoords.second + HITBOX_HEIGHT) / LEVEL_HEIGHT};
+
+            for(int i = topLeft.first; i <= bottomRight.first; i++) {
+                for(int j = topLeft.second; j <= bottomRight.second; j++) {
+                    if(levels[currentLevel][j*LEVEL_WIDTH + i] != -1) {
+                        isIntersect = true;
+                    }
+                }
             }
 
-            float initialY = y;
+            return isIntersect;
+        }
 
+        void move() {
+            bool isIntersect = willIntersectTile();
+
+            x += speedX;
+            float initialY = y;
             y += speedY;
-            if((y < 0) || (y +  HITBOX_HEIGHT > SCREEN_HEIGHT)){
+
+            if(isIntersect) {
+                isContactWall = true;
+                x -= speedX;
                 y -= speedY;
+                speedX = 0;
+                speedY = 0;
+            }
+
+            speedY += acceleration;
+
+            if(willIntersectTile()) {
+                speedY = 0;
             }
 
             isFalling = initialY < y ? true : false;
-
-            speedY += speedY < HITBOX_HEIGHT ? acceleration : 0;
         }
 
         void handleEvents(SDL_Event& event) {
             if(event.type == SDL_KEYDOWN && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
-                    case SDLK_w: speedY = -2*velocity; break;
-                    case SDLK_SPACE: speedY = -2*velocity; break;
-                    // case SDLK_s: speedY += velocity; break;
-                    case SDLK_a: speedX -= velocity; break;
+                    case SDLK_w: speedY = -jumpMultiplier*velocity; break;
+                    case SDLK_SPACE: speedY = -jumpMultiplier*velocity; break;
+                    case SDLK_a: speedX += -velocity; break;
                     case SDLK_d: speedX += velocity; break;
                 }
             } else if(event.type == SDL_KEYUP && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
-                    // case SDLK_w: speedY -= velocity; break;
-                    // case SDLK_s: speedY -= velocity; break;
-                    case SDLK_a: speedX += velocity; break;
-                    case SDLK_d: speedX -= velocity; break;
+                    case SDLK_a: if(!isContactWall) speedX += velocity; else isContactWall = false; break;
+                    case SDLK_d: if(!isContactWall) speedX += -velocity; else isContactWall = false; break;
                 }
             }
             if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
@@ -227,6 +251,32 @@ class Player {
         std::string playerState;
         bool isFalling;
         bool isAttacking;
+        bool isContactWall;
+        float jumpMultiplier;
+};
+
+class Level {
+    public:
+        Level() {
+            widthMultiplier = TILE_HITBOX_WIDTH / TILE_WIDTH;
+            heightMultiplier = TILE_HITBOX_HEIGHT / TILE_HEIGHT;
+        }
+
+        void render() {
+            for(int i = 0; i < LEVEL_HEIGHT; i++) {
+                for(int j = 0; j < LEVEL_WIDTH; j++) {
+                    int tile = levels[currentLevel][i*LEVEL_WIDTH + j];
+                    if(tile != -1) {
+                        int x = j*TILE_HITBOX_WIDTH;
+                        int y = i*TILE_HITBOX_HEIGHT;
+                        gTilesSpriteSheetTexture.render(x, y, &tilesClips.gTilesClips[tile], 0.0, NULL, SDL_FLIP_NONE, widthMultiplier, heightMultiplier);
+                    }
+                }
+            }
+        }
+    private:                        
+        float widthMultiplier;
+        float heightMultiplier;
 };
 
 bool loadMedia() {
@@ -265,6 +315,7 @@ int main(int argc, char* args[]) {
     loadMedia();
 
     Player player;
+    Level level;
 
     bool quit = false;
     SDL_Event event;
@@ -279,8 +330,11 @@ int main(int argc, char* args[]) {
             player.handleEvents(event);
         }
 
-        SDL_SetRenderDrawColor(gRenderer, 0x00, 0x000, 0x00, 0x00);
+        SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);
         SDL_RenderClear(gRenderer);
+
+        level.render();
+
         player.move();
         player.setDirection();
         player.setClip();

@@ -17,11 +17,11 @@ const int LEVEL_HEIGHT = 30;
 
 const int TILE_ROW = 16;
 const int TILE_COLUMN = 12;
-const int TILE_WIDTH = 16;
-const int TILE_HEIGHT = 16;
+const float TILE_WIDTH = 16;
+const float TILE_HEIGHT = 16;
 
-const int TILE_HITBOX_WIDTH = 30;
-const int TILE_HITBOX_HEIGHT = 30;
+const float TILE_HITBOX_WIDTH = 30;
+const float TILE_HITBOX_HEIGHT = 30;
 
 const int ANIMATION_FRAME_RATE = 8;
 
