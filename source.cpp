@@ -18,7 +18,7 @@ SDL_Window* gWindow = NULL;
 SDL_Renderer* gRenderer = NULL;
 TTF_Font *gFont = NULL;
 
-int currentLevel = 0;
+int currentLevel = 1;
 
 class LTexture {
     public:
