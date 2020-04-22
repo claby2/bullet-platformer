@@ -122,7 +122,9 @@ class Player {
         void setClip() {
             std::pair<int, int> initialClip = clip;
 
-            if(isAttacking) {
+            if(isContactWall) {
+                playerState = "wallSlide";
+            } else if(isAttacking) {
                 playerState = "attack1";
             } else if(speedY < 0) {
                 playerState = "jump";
@@ -203,6 +205,8 @@ class Player {
             }
 
             isFalling = initialY < y ? true : false;
+
+            std::cout << isContactWall << "\n";
         }
 
         void handleEvents(SDL_Event& event) {
@@ -210,8 +214,8 @@ class Player {
                 switch(event.key.keysym.sym){
                     case SDLK_w: speedY = -jumpMultiplier*velocity; break;
                     case SDLK_SPACE: speedY = -jumpMultiplier*velocity; break;
-                    case SDLK_a: speedX += -velocity; break;
-                    case SDLK_d: speedX += velocity; break;
+                    case SDLK_a: if(!isContactWall) speedX += -velocity; else isContactWall = false; break;
+                    case SDLK_d: if(!isContactWall) speedX += velocity; else isContactWall = false; break;
                 }
             } else if(event.type == SDL_KEYUP && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
