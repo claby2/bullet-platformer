@@ -30,7 +30,7 @@ class LTexture {
 		~LTexture() {
             free();
         }
-		bool loadFromFile( std::string path ) {
+		bool loadFromFile(std::string path) {
             free();
             SDL_Texture* newTexture = NULL;
             SDL_Surface* loadedSurface = IMG_Load(path.c_str());
@@ -116,15 +116,14 @@ class Player {
             isFalling = false;
             isAttacking = false;
             isContactWall = false;
+            isJumping = false;
             jumpMultiplier = 3.0;
         }
 
         void setClip() {
             std::pair<int, int> initialClip = clip;
 
-            if(isContactWall) {
-                playerState = "wallSlide";
-            } else if(isAttacking) {
+            if(isAttacking) {
                 playerState = "attack1";
             } else if(speedY < 0) {
                 playerState = "jump";
@@ -201,19 +200,19 @@ class Player {
             speedY += acceleration;
 
             if(willIntersectTile()) {
+                if(isJumping) isJumping = false;
+
                 speedY = 0;
             }
 
             isFalling = initialY < y ? true : false;
-
-            std::cout << isContactWall << "\n";
         }
 
         void handleEvents(SDL_Event& event) {
             if(event.type == SDL_KEYDOWN && event.key.repeat == 0){
                 switch(event.key.keysym.sym){
-                    case SDLK_w: speedY = -jumpMultiplier*velocity; break;
-                    case SDLK_SPACE: speedY = -jumpMultiplier*velocity; break;
+                    case SDLK_w: if(!isJumping){speedY = -jumpMultiplier*velocity; isJumping = true;} break;
+                    case SDLK_SPACE: if(!isJumping){speedY = -jumpMultiplier*velocity; isJumping = true;} break;
                     case SDLK_a: if(!isContactWall) speedX += -velocity; else isContactWall = false; break;
                     case SDLK_d: if(!isContactWall) speedX += velocity; else isContactWall = false; break;
                 }
@@ -256,6 +255,7 @@ class Player {
         bool isFalling;
         bool isAttacking;
         bool isContactWall;
+        bool isJumping;
         float jumpMultiplier;
 };
 
@@ -309,7 +309,7 @@ bool init() {
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
     gWindow = SDL_CreateWindow("Bullet Platformer", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
     gRenderer = SDL_CreateRenderer(gWindow, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
+    SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);
     IMG_Init(IMG_INIT_PNG);
     TTF_Init();
 }
