@@ -1,4 +1,4 @@
-#include "C:/MinGW/include/SDL2/SDL.h"
+#include <SDL2/SDL.h>
 #include "./constants.cpp"
 
 struct tiles_clip_container {
