@@ -118,6 +118,7 @@ class Player {
             isJumping = false;
             jumpMultiplier = 3.7;
             isAPressed = isDPressed = false;
+            animationFPS = ANIMATION_FRAME_RATE;
         }
 
         void setClip() {
@@ -151,7 +152,7 @@ class Player {
             else if(playerState == "wallSlide") clip = playerAnimations.wallSlide;
 
             if(initialClip != clip) {
-                frame = clip.first*ANIMATION_FRAME_RATE;
+                frame = clip.first*animationFPS;
             }
         }
 
@@ -178,7 +179,6 @@ class Player {
                 for(int j = topLeft.second; j <= bottomRight.second; j++) {
                     if(levels[currentLevel][j*LEVEL_WIDTH + i] != -1) {
                         isIntersect = true;
-                        // if(debug) std::cout << "INTERSECT\n";
                     }
 
                     if(debug){
@@ -230,9 +230,7 @@ class Player {
                     case SDLK_d: if(isDPressed){ speedX = 0; isDPressed = false; } break;
                 }
             }
-            if(isAPressed && isDPressed){
-                speedX = 0;
-            }
+            if(isAPressed && isDPressed) speedX = 0;
             else if(isAPressed) speedX = -velocity;
             else if(isDPressed) speedX = velocity;
             if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
@@ -240,17 +238,18 @@ class Player {
             }
         }
 
-        void render() {
+        void render(int refreshRate) {
+            animationFPS = floor(0.06 * refreshRate);
             if(playerState == "jump" || playerState == "fall") {
-                frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.second*ANIMATION_FRAME_RATE : frame + 1;
+                frame = frame / animationFPS >= clip.second ? clip.second*animationFPS : frame + 1;
             } else {
-                if((playerState == "attack1" || playerState == "attack2" || playerState == "attack3") && (frame / ANIMATION_FRAME_RATE >= clip.second)) {
+                if((playerState == "attack1" || playerState == "attack2" || playerState == "attack3") && (frame / animationFPS >= clip.second)) {
                     isAttacking = false;
                 }
-                frame = frame / ANIMATION_FRAME_RATE >= clip.second ? clip.first*ANIMATION_FRAME_RATE : frame + 1;
+                frame = frame / animationFPS >= clip.second ? clip.first*animationFPS : frame + 1;
             }
             res = direction  ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-            gSpriteSheetTexture.render(x, y, &playerClips.gHeroKnightClips[frame / ANIMATION_FRAME_RATE], 0.0, NULL, res);
+            gSpriteSheetTexture.render(x, y, &playerClips.gHeroKnightClips[frame / animationFPS], 0.0, NULL, res);
         }
 
     private:
@@ -270,6 +269,7 @@ class Player {
         bool isAPressed, isDPressed;
         bool isJumping;
         float jumpMultiplier;
+        int animationFPS;
 };
 
 class Level {
@@ -341,6 +341,9 @@ int main(int argc, char* args[]) {
     Uint64 last = 0;
     double delta = 0;
 
+    SDL_DisplayMode display;
+    SDL_GetCurrentDisplayMode(0, &display);
+
     while(!quit) {
         last = now;
         now = SDL_GetPerformanceCounter();
@@ -355,15 +358,12 @@ int main(int argc, char* args[]) {
 
         SDL_SetRenderDrawColor(gRenderer, 0x00, 0x00, 0x00, 0x00);
         SDL_RenderClear(gRenderer);
-
         level.render();
-
         player.move(delta);
         player.setDirection();
         player.setClip();
-        player.render();
+        player.render(display.refresh_rate);
         SDL_RenderPresent(gRenderer);
-
     }
 
     close();
