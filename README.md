@@ -17,3 +17,4 @@ $ ./source
 ## Resources
 - [Hero Knight Sprite](https://stensven.itch.io/hero-knight)
 - [Fantasy Pixel Art Tileset](https://mostbestestgames.itch.io/fantasy-pixelart-tileset)
+- [Projectiles](https://kicked-in-teeth.itch.io/projectiles)
