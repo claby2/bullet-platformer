@@ -6,9 +6,12 @@
 #include <chrono>
 #include <map>
 #include <iostream>
+#include <vector>
+#include <string.h>
 #include "./playerAnimations.cpp"
 #include "./playerClips.cpp"
 #include "./tilesClips.cpp"
+#include "./projectilesClips.cpp"
 #include "./levels.cpp"
 #include "./constants.cpp"
 
@@ -96,8 +99,10 @@ class LTexture {
 
 constexpr player_clip_container playerClips;
 constexpr tiles_clip_container tilesClips;
+constexpr projectiles_clip_container projectilesClips;
 LTexture gSpriteSheetTexture;
 LTexture gTilesSpriteSheetTexture;
+LTexture gProjectilesSpriteSheetTexture;
 LTexture gTextTexture;
 
 class Player {
@@ -272,6 +277,68 @@ class Player {
         int animationFPS;
 };
 
+class Spawner {
+    public:
+        float lifetime;
+        float fireState;
+
+        Spawner() {
+            widthMultiplier = PROJECTILE_HITBOX_WIDTH / PROJECTILE_WIDTH;
+            heightMultiplier = PROJECTILE_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
+            type = 20;
+            lifetime = 10000.0;
+            fireRate = 1000.0;
+            fireState = fireRate;
+            yOffset = 0;
+            yOffsetFactor = -1;
+            yOffsetShake = 10;
+        }
+
+        void spawn(int spawnerMap[LEVEL_HEIGHT * LEVEL_WIDTH]) {
+            std::vector<std::pair<int, int> > possibleLocations;
+            for(int i = 0; i < LEVEL_HEIGHT; i++) {
+                for(int j = 0; j < LEVEL_WIDTH; j++) {
+                    if(spawnerMap[i*LEVEL_WIDTH + j] == 0 && levels[currentLevel][i*LEVEL_WIDTH + j] == -1) {
+                        possibleLocations.push_back(std::make_pair(j, i));
+                    }
+                }
+            }
+            std::pair<int, int> randomLocation = possibleLocations[rand()%possibleLocations.size()];
+            spawnerMap[randomLocation.second * LEVEL_WIDTH + randomLocation.first] = 1;
+            x = randomLocation.first * TILE_HITBOX_WIDTH;
+            y = randomLocation.second * TILE_HITBOX_HEIGHT;
+        }
+
+        void createProjectile() {
+            fireState = fireRate;
+            // Create Projectile
+        }
+
+        void render(float delta) {
+            lifetime -= delta;
+            fireState -= delta;
+
+            yOffset += yOffsetFactor * (delta / yOffsetShake);
+            if(yOffset >= 2*(delta / yOffsetShake) || yOffset <= -2*(delta / yOffsetShake)) {
+                yOffsetFactor = yOffsetFactor == -1 ? yOffsetFactor = 1 : yOffsetFactor = -1;
+                yOffset = 0;
+            }
+
+            gProjectilesSpriteSheetTexture.render(x, y + yOffset, &projectilesClips.gProjectilesClips[type], 0.0, NULL, SDL_FLIP_NONE, widthMultiplier, heightMultiplier);
+        }
+
+    private:
+        float widthMultiplier;
+        float heightMultiplier;
+        float fireRate;
+        int type;
+        float x;
+        float y;
+        float yOffset;
+        float yOffsetFactor;
+        float yOffsetShake;
+};
+
 class Level {
     public:
         Level() {
@@ -300,11 +367,13 @@ void loadMedia() {
     gFont = TTF_OpenFont("fonts/OpenSans-Regular.ttf", 28);
     gSpriteSheetTexture.loadFromFile("assets/hero_knight_sprite_sheet.png");
     gTilesSpriteSheetTexture.loadFromFile("assets/tiles_sprite_sheet.png");
+    gProjectilesSpriteSheetTexture.loadFromFile("assets/projectiles_sprite_sheet.png");
 }
 
 void close() {
     gSpriteSheetTexture.free();
     gTilesSpriteSheetTexture.free();
+    gProjectilesSpriteSheetTexture.free();
     gTextTexture.free();
     TTF_CloseFont(gFont);
     gFont = NULL;
@@ -328,8 +397,14 @@ void init() {
 }
 
 int main(int argc, char* args[]) {
+    srand((unsigned)time(NULL));
     init();
     loadMedia();
+
+    int spawnerMap[LEVEL_HEIGHT * LEVEL_WIDTH];
+    memset(spawnerMap, 0, sizeof(spawnerMap));
+    int spawnerMaximum = 3;
+    std::vector<Spawner> spawners;
 
     Player player;
     Level level;
@@ -363,6 +438,21 @@ int main(int argc, char* args[]) {
         player.setDirection();
         player.setClip();
         player.render(display.refresh_rate);
+        for(int i = spawners.size(); i < spawnerMaximum; i++) {
+            Spawner spawner;
+            spawner.spawn(spawnerMap);
+            spawners.push_back(spawner);
+        }
+        for(int i = 0; i < spawners.size(); i++) {
+            if(spawners[i].lifetime <= 0) {
+                spawners.erase(spawners.begin() + i);
+            } else {
+                if(spawners[i].fireState <= 0) {
+                    spawners[i].createProjectile();
+                }
+                spawners[i].render(delta);
+            }
+        }
         SDL_RenderPresent(gRenderer);
     }
 

@@ -23,6 +23,14 @@ const float TILE_HEIGHT = 16;
 const float TILE_HITBOX_WIDTH = 30;
 const float TILE_HITBOX_HEIGHT = 30;
 
+const int PROJECTILE_ROW = 6;
+const int PROJECTILE_COLUMN = 13;
+const float PROJECTILE_WIDTH = 16;
+const float PROJECTILE_HEIGHT = 16;
+
+const float PROJECTILE_HITBOX_WIDTH = 30;
+const float PROJECTILE_HITBOX_HEIGHT = 30;
+
 const int ANIMATION_FRAME_RATE = 8;
 
 #endif
