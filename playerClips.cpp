@@ -2,7 +2,7 @@
 #include "./constants.cpp"
 
 struct player_clip_container {
-    SDL_Rect gHeroKnightClips[90];
+    SDL_Rect gHeroKnightClips[SPRITE_ROW*SPRITE_COLUMN];
     constexpr player_clip_container() : gHeroKnightClips() {
         for(int i = 0; i < SPRITE_ROW; i++) {
             for(int j = 0; j < SPRITE_COLUMN; j++) {
