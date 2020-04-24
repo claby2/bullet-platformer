@@ -312,7 +312,7 @@ class Spawner {
             y = randomLocation.second * TILE_HITBOX_HEIGHT;
         }
 
-        void createProjectile() {
+        void resetFireRate() {
             fireState = fireRate;
         }
 
@@ -513,7 +513,7 @@ int main(int argc, char* args[]) {
                 spawners.erase(spawners.begin() + i);
             } else {
                 if(spawners[i].fireState <= 0) {
-                    spawners[i].createProjectile();
+                    spawners[i].resetFireRate();
                     if(spawners[i].type == 20) {
                         for(int j = 0; j < 4; j++) {
                             Projectile projectile;
