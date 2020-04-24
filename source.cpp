@@ -281,10 +281,13 @@ class Spawner {
     public:
         float lifetime;
         float fireState;
+        int type;
+        float x;
+        float y;
 
         Spawner() {
-            widthMultiplier = PROJECTILE_HITBOX_WIDTH / PROJECTILE_WIDTH;
-            heightMultiplier = PROJECTILE_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
+            widthMultiplier = SPAWNER_HITBOX_WIDTH / PROJECTILE_WIDTH;
+            heightMultiplier = SPAWNER_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
             type = 20;
             lifetime = 10000.0;
             fireRate = 1000.0;
@@ -311,7 +314,6 @@ class Spawner {
 
         void createProjectile() {
             fireState = fireRate;
-            // Create Projectile
         }
 
         void render(float delta) {
@@ -331,12 +333,64 @@ class Spawner {
         float widthMultiplier;
         float heightMultiplier;
         float fireRate;
-        int type;
-        float x;
-        float y;
         float yOffset;
         float yOffsetFactor;
         float yOffsetShake;
+};
+
+class Projectile {
+    public:
+        Projectile() {
+            widthMultiplier = PROJECTILE_HITBOX_WIDTH / PROJECTILE_WIDTH;
+            heightMultiplier = PROJECTILE_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
+        }
+
+        void setProperties(float spawnerX, float spawnerY, float spawnerType, float setSpeedX = 0, float setSpeedY = 0) {
+            x = spawnerX + ((SPAWNER_HITBOX_WIDTH - PROJECTILE_HITBOX_WIDTH) / 2);
+            y = spawnerY + ((SPAWNER_HITBOX_HEIGHT - PROJECTILE_HITBOX_HEIGHT) / 2);
+            type = spawnerType;
+            speedX = setSpeedX;
+            speedY = setSpeedY;
+        }
+
+        bool willIntersectTile(float delta) {
+            bool isIntersect = false;
+
+            std::pair<float, float> playerCoords = {x + (speedX * delta), y + (speedY * delta) };
+            std::pair<int, int> topLeft = {playerCoords.first / LEVEL_WIDTH, playerCoords.second / LEVEL_HEIGHT};
+            std::pair<int, int> bottomRight = {(playerCoords.first + PROJECTILE_HITBOX_WIDTH) / LEVEL_WIDTH, (playerCoords.second + PROJECTILE_HITBOX_HEIGHT) / LEVEL_HEIGHT};
+
+            for(int i = topLeft.first; i <= bottomRight.first; i++) {
+                for(int j = topLeft.second; j <= bottomRight.second; j++) {
+                    if(levels[currentLevel][j*LEVEL_WIDTH + i] != -1) {
+                        isIntersect = true;
+                    }
+                }
+            }
+
+            return isIntersect;
+        }
+
+        void move() {
+            if(type == 20) {
+                x += speedX;
+                y += speedY;
+            }
+        }
+
+        void render() {
+            gProjectilesSpriteSheetTexture.render(x, y, &projectilesClips.gProjectilesClips[type], 0.0, NULL, SDL_FLIP_NONE, widthMultiplier, heightMultiplier);
+        }
+
+    private:
+        float widthMultiplier;
+        float heightMultiplier;
+        int type;
+        float x;
+        float y;
+        float speedX;
+        float speedY;
+        
 };
 
 class Level {
@@ -406,6 +460,9 @@ int main(int argc, char* args[]) {
     int spawnerMaximum = 3;
     std::vector<Spawner> spawners;
 
+    std::vector<Projectile> projectiles;
+    std::pair<float, float> cardinalDirections[4] = {{0.0, -1.0,}, {1.0, 0.0,}, {0.0, 1.0,}, {-1.0, 0.0,}};
+
     Player player;
     Level level;
 
@@ -443,17 +500,34 @@ int main(int argc, char* args[]) {
             spawner.spawn(spawnerMap);
             spawners.push_back(spawner);
         }
+        for(int i = 0; i < projectiles.size(); i++) {
+            projectiles[i].move();
+            if(projectiles[i].willIntersectTile(delta)) {
+                projectiles.erase(projectiles.begin() + i);
+            } else {
+                projectiles[i].render();
+            }
+        }
         for(int i = 0; i < spawners.size(); i++) {
             if(spawners[i].lifetime <= 0) {
                 spawners.erase(spawners.begin() + i);
             } else {
                 if(spawners[i].fireState <= 0) {
                     spawners[i].createProjectile();
+                    if(spawners[i].type == 20) {
+                        for(int j = 0; j < 4; j++) {
+                            Projectile projectile;
+                            projectile.setProperties(spawners[i].x, spawners[i].y, spawners[i].type, cardinalDirections[j].first, cardinalDirections[j].second);
+                            projectiles.push_back(projectile);
+                        }
+                    }
                 }
                 spawners[i].render(delta);
             }
         }
         SDL_RenderPresent(gRenderer);
+
+        std::cout << projectiles.size() << "\n";
     }
 
     close();
