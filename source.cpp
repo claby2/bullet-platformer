@@ -9,9 +9,6 @@
 #include <vector>
 #include <string.h>
 #include "./playerAnimations.cpp"
-#include "./playerClips.cpp"
-#include "./tilesClips.cpp"
-#include "./projectilesClips.cpp"
 #include "./levels.cpp"
 #include "./constants.cpp"
 
