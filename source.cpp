@@ -104,6 +104,9 @@ LTexture gTextTexture;
 
 class Player {
     public:
+        float x;
+        float y;
+
         Player() {
             velocity = 0.2;
             x = SCREEN_WIDTH/2;
@@ -257,8 +260,6 @@ class Player {
     private:
         SDL_RendererFlip res;
         float velocity;
-        float x;
-        float y;
         float speedX;
         float speedY;
         float acceleration;
@@ -368,10 +369,18 @@ class Projectile {
             return isIntersect;
         }
 
-        void move() {
+        bool isIntersectPlayer(float playerX, float playerY) {
+            playerX += ((SPRITE_WIDTH - HITBOX_WIDTH)/2);
+            if(std::max(playerX, x) >= std::min(playerX + HITBOX_WIDTH, x + PROJECTILE_HITBOX_WIDTH) || (std::max(playerY, y) >= std::min(playerY + HITBOX_HEIGHT, y + PROJECTILE_HITBOX_HEIGHT))) {
+                return false;
+            }
+            return true;
+        }
+
+        void move(float delta) {
             if(type == 20) {
-                x += speedX;
-                y += speedY;
+                x += speedX * delta;
+                y += speedY * delta;
             }
         }
 
@@ -458,7 +467,7 @@ int main(int argc, char* args[]) {
     std::vector<Spawner> spawners;
 
     std::vector<Projectile> projectiles;
-    std::pair<float, float> cardinalDirections[4] = {{0.0, -1.0,}, {1.0, 0.0,}, {0.0, 1.0,}, {-1.0, 0.0,}};
+    std::pair<float, float> cardinalDirections[4] = {{0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}};
 
     Player player;
     Level level;
@@ -498,8 +507,10 @@ int main(int argc, char* args[]) {
             spawners.push_back(spawner);
         }
         for(int i = 0; i < projectiles.size(); i++) {
-            projectiles[i].move();
+            projectiles[i].move(delta);
             if(projectiles[i].willIntersectTile(delta)) {
+                projectiles.erase(projectiles.begin() + i);
+            } else if(projectiles[i].isIntersectPlayer(player.x, player.y)) {
                 projectiles.erase(projectiles.begin() + i);
             } else {
                 projectiles[i].render();
