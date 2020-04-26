@@ -97,6 +97,7 @@ class LTexture {
 constexpr player_clip_container playerClips;
 constexpr tiles_clip_container tilesClips;
 constexpr projectiles_clip_container projectilesClips;
+constexpr spawner_properties_container spawnerProperties;
 LTexture gSpriteSheetTexture;
 LTexture gTilesSpriteSheetTexture;
 LTexture gProjectilesSpriteSheetTexture;
@@ -311,9 +312,9 @@ class Spawner {
         Spawner() {
             widthMultiplier = SPAWNER_HITBOX_WIDTH / PROJECTILE_WIDTH;
             heightMultiplier = SPAWNER_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
-            type = 20;
-            lifetime = 10000.0;
-            fireRate = 1000.0;
+            type = 13;
+            lifetime = spawnerProperties.properties[type].lifetime;
+            fireRate = spawnerProperties.properties[type].fireRate;
             fireState = fireRate;
             yOffset = 0;
             yOffsetFactor = -1;
@@ -363,6 +364,8 @@ class Spawner {
 
 class Projectile {
     public:
+        float damage;
+
         Projectile() {
             widthMultiplier = PROJECTILE_HITBOX_WIDTH / PROJECTILE_WIDTH;
             heightMultiplier = PROJECTILE_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
@@ -374,6 +377,7 @@ class Projectile {
             type = spawnerType;
             speedX = setSpeedX;
             speedY = setSpeedY;
+            damage = spawnerProperties.properties[type].damage;
         }
 
         bool willIntersectTile(float delta) {
@@ -403,7 +407,7 @@ class Projectile {
         }
 
         void move(float delta) {
-            if(type == 20) {
+            if(type == 20 || type == 13) {
                 x += speedX * delta;
                 y += speedY * delta;
             }
@@ -493,6 +497,7 @@ int main(int argc, char* args[]) {
 
     std::vector<Projectile> projectiles;
     std::pair<float, float> cardinalDirections[4] = {{0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}};
+    std::pair<float, float> diagonalDirections[4] = {{-0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}, {-0.5, 0.5}};
 
     Player player;
     Level level;
@@ -537,7 +542,7 @@ int main(int argc, char* args[]) {
                 projectiles.erase(projectiles.begin() + i);
             } else if(projectiles[i].isIntersectPlayer(player.x, player.y)) {
                 projectiles.erase(projectiles.begin() + i);
-                if(player.takeDamage(10)) {
+                if(player.takeDamage(projectiles[i].damage)) {
                     quit = true;
                 }
             } else {
@@ -550,7 +555,13 @@ int main(int argc, char* args[]) {
             } else {
                 if(spawners[i].fireState <= 0) {
                     spawners[i].resetFireRate();
-                    if(spawners[i].type == 20) {
+                    if(spawners[i].type == 13) {
+                        for(int j = 0; j < 4; j++) {
+                            Projectile projectile;
+                            projectile.setProperties(spawners[i].x, spawners[i].y, spawners[i].type, diagonalDirections[j].first, diagonalDirections[j].second);
+                            projectiles.push_back(projectile);
+                        }
+                    } else if(spawners[i].type == 20) {
                         for(int j = 0; j < 4; j++) {
                             Projectile projectile;
                             projectile.setProperties(spawners[i].x, spawners[i].y, spawners[i].type, cardinalDirections[j].first, cardinalDirections[j].second);

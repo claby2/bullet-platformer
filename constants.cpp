@@ -81,4 +81,27 @@ struct projectiles_clip_container {
     }
 };
 
+struct spawnerProperty {
+    float lifetime;
+    float fireRate;
+    float damage;
+};
+
+struct spawner_properties_container {
+    spawnerProperty properties[PROJECTILE_ROW*PROJECTILE_COLUMN];
+    constexpr spawner_properties_container() : properties() {
+        for(int i = 0; i < PROJECTILE_ROW*PROJECTILE_COLUMN; i++) {
+            properties[i].lifetime = 0.0;
+            properties[i].fireRate = 0.0;
+            properties[i].damage = 0.0;
+        }
+        properties[13].lifetime = 10000.0;
+        properties[13].fireRate = 500.0;
+        properties[13].damage = 1.0;
+        properties[20].lifetime = 10000.0;
+        properties[20].fireRate = 1000.0;
+        properties[20].damage = 10.0;
+    }
+};
+
 #endif
