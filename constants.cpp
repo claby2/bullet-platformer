@@ -37,6 +37,8 @@ const float PROJECTILE_HITBOX_HEIGHT = 15;
 
 const int ANIMATION_FRAME_RATE = 8;
 
+const float MAXIMUM_HP = 100;
+
 struct player_clip_container {
     SDL_Rect gHeroKnightClips[SPRITE_ROW*SPRITE_COLUMN];
     constexpr player_clip_container() : gHeroKnightClips() {

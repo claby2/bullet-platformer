@@ -124,6 +124,13 @@ class Player {
             jumpMultiplier = 3.7;
             isAPressed = isDPressed = false;
             animationFPS = ANIMATION_FRAME_RATE;
+            hp = MAXIMUM_HP;
+            hpMax = {
+                TILE_HITBOX_WIDTH, 
+                TILE_HITBOX_HEIGHT, 
+                (SCREEN_WIDTH - (2*TILE_HITBOX_WIDTH)) / 2, 
+                TILE_HITBOX_HEIGHT / 2
+            };
         }
 
         void setClip() {
@@ -161,12 +168,13 @@ class Player {
             }
         }
 
+        bool takeDamage(float damage) {
+            hp -= damage;
+            return hp <= 0;
+        }
+
         void setDirection() {
-            if(speedX > 0) {
-                direction = false;
-            } else if(speedX < 0){
-                direction = true;
-            }
+            direction = speedX > 0 ? false : true;
         }
 
         bool willIntersectTile(float speedX, float speedY, float delta, bool debug) {
@@ -257,6 +265,21 @@ class Player {
             gSpriteSheetTexture.render(x, y, &playerClips.gHeroKnightClips[frame / animationFPS], 0.0, NULL, res);
         }
 
+        void renderHealth() {
+            SDL_Rect hpCurrent = {
+                TILE_HITBOX_WIDTH,
+                TILE_HITBOX_HEIGHT,
+                (hp / MAXIMUM_HP) * ((SCREEN_WIDTH - (2*TILE_HITBOX_WIDTH)) / 2),
+                TILE_HITBOX_HEIGHT / 2
+            };
+            SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0x10);
+            SDL_RenderFillRect(gRenderer, &hpMax);
+            SDL_RenderDrawRect(gRenderer, &hpMax);
+            SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0x10);
+            SDL_RenderFillRect(gRenderer, &hpCurrent);
+            SDL_RenderDrawRect(gRenderer, &hpCurrent);
+        }
+
     private:
         SDL_RendererFlip res;
         float velocity;
@@ -273,6 +296,8 @@ class Player {
         bool isJumping;
         float jumpMultiplier;
         int animationFPS;
+        float hp;
+        SDL_Rect hpMax;
 };
 
 class Spawner {
@@ -463,7 +488,7 @@ int main(int argc, char* args[]) {
 
     int spawnerMap[LEVEL_HEIGHT * LEVEL_WIDTH];
     memset(spawnerMap, 0, sizeof(spawnerMap));
-    int spawnerMaximum = 3;
+    int spawnerMaximum = 10;
     std::vector<Spawner> spawners;
 
     std::vector<Projectile> projectiles;
@@ -512,6 +537,9 @@ int main(int argc, char* args[]) {
                 projectiles.erase(projectiles.begin() + i);
             } else if(projectiles[i].isIntersectPlayer(player.x, player.y)) {
                 projectiles.erase(projectiles.begin() + i);
+                if(player.takeDamage(10)) {
+                    quit = true;
+                }
             } else {
                 projectiles[i].render();
             }
@@ -533,6 +561,8 @@ int main(int argc, char* args[]) {
                 spawners[i].render(delta);
             }
         }
+
+        player.renderHealth();
         SDL_RenderPresent(gRenderer);
     }
 
