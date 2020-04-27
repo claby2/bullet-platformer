@@ -452,6 +452,22 @@ class Level {
         float heightMultiplier;
 };
 
+void spawnProjectiles(std::vector<Projectile> &projectiles, Spawner spawner) {
+    if(spawner.type == 13) {
+        for(int j = 0; j < 4; j++) {
+            Projectile projectile;
+            projectile.setProperties(spawner.x, spawner.y, spawner.type, diagonalDirections[j].first, diagonalDirections[j].second);
+            projectiles.push_back(projectile);
+        }
+    } else if(spawner.type == 20) {
+        for(int j = 0; j < 4; j++) {
+            Projectile projectile;
+            projectile.setProperties(spawner.x, spawner.y, spawner.type, cardinalDirections[j].first, cardinalDirections[j].second);
+            projectiles.push_back(projectile);
+        }
+    }
+}
+
 void loadMedia() {
     gFont = TTF_OpenFont("fonts/OpenSans-Regular.ttf", 28);
     gSpriteSheetTexture.loadFromFile("assets/hero_knight_sprite_sheet.png");
@@ -496,8 +512,6 @@ int main(int argc, char* args[]) {
     std::vector<Spawner> spawners;
 
     std::vector<Projectile> projectiles;
-    std::pair<float, float> cardinalDirections[4] = {{0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}};
-    std::pair<float, float> diagonalDirections[4] = {{-0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}, {-0.5, 0.5}};
 
     Player player;
     Level level;
@@ -555,19 +569,7 @@ int main(int argc, char* args[]) {
             } else {
                 if(spawners[i].fireState <= 0) {
                     spawners[i].resetFireRate();
-                    if(spawners[i].type == 13) {
-                        for(int j = 0; j < 4; j++) {
-                            Projectile projectile;
-                            projectile.setProperties(spawners[i].x, spawners[i].y, spawners[i].type, diagonalDirections[j].first, diagonalDirections[j].second);
-                            projectiles.push_back(projectile);
-                        }
-                    } else if(spawners[i].type == 20) {
-                        for(int j = 0; j < 4; j++) {
-                            Projectile projectile;
-                            projectile.setProperties(spawners[i].x, spawners[i].y, spawners[i].type, cardinalDirections[j].first, cardinalDirections[j].second);
-                            projectiles.push_back(projectile);
-                        }
-                    }
+                    spawnProjectiles(projectiles, spawners[i]);
                 }
                 spawners[i].render(delta);
             }

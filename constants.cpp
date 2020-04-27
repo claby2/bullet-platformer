@@ -104,4 +104,7 @@ struct spawner_properties_container {
     }
 };
 
+std::pair<float, float> cardinalDirections[4] = {{0.0, -1.0}, {1.0, 0.0}, {0.0, 1.0}, {-1.0, 0.0}};
+std::pair<float, float> diagonalDirections[4] = {{-0.5, -0.5}, {0.5, -0.5}, {0.5, 0.5}, {-0.5, 0.5}};
+
 #endif
