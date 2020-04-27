@@ -132,6 +132,7 @@ class Player {
                 (SCREEN_WIDTH - (2*TILE_HITBOX_WIDTH)) / 2, 
                 TILE_HITBOX_HEIGHT / 2
             };
+            tookDamage = false;
         }
 
         void setClip() {
@@ -139,6 +140,8 @@ class Player {
 
             if(isAttacking) {
                 playerState = "attack1";
+            } else if(tookDamage) {
+                playerState = "hurt";
             } else if(speedY < 0) {
                 playerState = "jump";
             } else if(isFalling) {
@@ -170,12 +173,13 @@ class Player {
         }
 
         bool takeDamage(float damage) {
+            tookDamage = true;
             hp -= damage;
             return hp <= 0;
         }
 
         void setDirection() {
-            direction = speedX > 0 ? false : true;
+            if(speedX) direction = speedX > 0 ? false : true;
         }
 
         bool willIntersectTile(float speedX, float speedY, float delta, bool debug) {
@@ -259,6 +263,8 @@ class Player {
             } else {
                 if((playerState == "attack1" || playerState == "attack2" || playerState == "attack3") && (frame / animationFPS >= clip.second)) {
                     isAttacking = false;
+                } else if(playerState == "hurt" && frame / animationFPS >= clip.second) {
+                    tookDamage = false;
                 }
                 frame = frame / animationFPS >= clip.second ? clip.first*animationFPS : frame + 1;
             }
@@ -299,6 +305,7 @@ class Player {
         int animationFPS;
         float hp;
         SDL_Rect hpMax;
+        bool tookDamage;
 };
 
 class Spawner {
@@ -312,7 +319,7 @@ class Spawner {
         Spawner() {
             widthMultiplier = SPAWNER_HITBOX_WIDTH / PROJECTILE_WIDTH;
             heightMultiplier = SPAWNER_HITBOX_HEIGHT / PROJECTILE_HEIGHT;
-            type = 13;
+            type = rand()%2 == 0 ? 13 : 20;
             lifetime = spawnerProperties.properties[type].lifetime;
             fireRate = spawnerProperties.properties[type].fireRate;
             fireState = fireRate;
