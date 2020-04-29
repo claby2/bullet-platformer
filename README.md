@@ -1,6 +1,8 @@
 ## Bullet Platformer
 A platformer game built with SDL2.
 
+<img width = "400px" height = "400px" alt = "preview" src = "./assets/thumbnail.png">
+
 ## Dependencies
 ```
 SDL2
