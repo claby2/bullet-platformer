@@ -127,10 +127,10 @@ class Player {
             animationFPS = ANIMATION_FRAME_RATE;
             hp = MAXIMUM_HP;
             hpMax = {
-                TILE_HITBOX_WIDTH, 
-                TILE_HITBOX_HEIGHT, 
-                (SCREEN_WIDTH - (2*TILE_HITBOX_WIDTH)) / 2, 
-                TILE_HITBOX_HEIGHT / 2
+                x, 
+                y, 
+                SPRITE_WIDTH, 
+                TILE_HITBOX_HEIGHT / 4
             };
             tookDamage = false;
             regenAmount = 0.01;
@@ -275,15 +275,21 @@ class Player {
 
         void renderHealth() {
             SDL_Rect hpCurrent = {
-                TILE_HITBOX_WIDTH,
-                TILE_HITBOX_HEIGHT,
-                (hp / MAXIMUM_HP) * ((SCREEN_WIDTH - (2*TILE_HITBOX_WIDTH)) / 2),
-                TILE_HITBOX_HEIGHT / 2
+                x, 
+                y, 
+                (hp / MAXIMUM_HP) * SPRITE_WIDTH, 
+                TILE_HITBOX_HEIGHT / 4
             };
-            SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0x10);
+            hpMax = {
+                x, 
+                y, 
+                SPRITE_WIDTH, 
+                TILE_HITBOX_HEIGHT / 4
+            };
+            SDL_SetRenderDrawColor(gRenderer, 0xFF, 0xFF, 0xFF, 0xFF);
             SDL_RenderFillRect(gRenderer, &hpMax);
             SDL_RenderDrawRect(gRenderer, &hpMax);
-            SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0x10);
+            SDL_SetRenderDrawColor(gRenderer, 0xFF, 0x00, 0x00, 0xFF);
             SDL_RenderFillRect(gRenderer, &hpCurrent);
             SDL_RenderDrawRect(gRenderer, &hpCurrent);
         }
