@@ -133,6 +133,7 @@ class Player {
                 TILE_HITBOX_HEIGHT / 2
             };
             tookDamage = false;
+            regenAmount = 0.01;
         }
 
         void setClip() {
@@ -287,6 +288,12 @@ class Player {
             SDL_RenderDrawRect(gRenderer, &hpCurrent);
         }
 
+        void regenHealth(float delta) {
+            if(!(isAPressed || isDPressed)) {
+                hp = (hp + (regenAmount * delta) <= MAXIMUM_HP) ? hp += regenAmount * delta : MAXIMUM_HP;
+            }
+        }
+
     private:
         SDL_RendererFlip res;
         float velocity;
@@ -306,6 +313,7 @@ class Player {
         float hp;
         SDL_Rect hpMax;
         bool tookDamage;
+        float regenAmount;
 };
 
 class Spawner {
@@ -551,6 +559,7 @@ int main(int argc, char* args[]) {
         player.move(delta);
         player.setDirection();
         player.setClip();
+        player.regenHealth(delta);
         player.render(display.refresh_rate);
         for(int i = spawners.size(); i < spawnerMaximum; i++) {
             Spawner spawner;
