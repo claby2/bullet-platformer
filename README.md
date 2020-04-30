@@ -1,5 +1,5 @@
 ## Bullet Platformer
-A platformer game built with SDL2.
+A platformer game built with SDL2 where the player dodges projectiles instantiated around the level.
 
 <img width = "400px" height = "400px" alt = "preview" src = "./assets/thumbnail.png">
 
